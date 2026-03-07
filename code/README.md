@@ -1,11 +1,12 @@
 # Code: Forward-Only Model Zoo (NumPy / TensorFlow / PyTorch)
 
-本仓库原本只有论文链接与笔记索引。`code/` 目录新增了一个 **“A 档”** 实现：**只实现结构与 forward**，用于学习/查阅与快速 smoke test。
+`code/` 提供一个“只 forward”的 toy 版实现：把根目录 `README.md` 里出现的模型都做成可运行的 forward，并提供 3 个后端：
 
-特点：
-- **每个 README 里出现的模型名**都对应一个可运行的 toy 版本
-- 每个模型都支持 3 个后端：`numpy` / `tf` / `torch`
-- **不做训练、不做指标复现、不做检测/分割后处理**（检测/分割只输出 raw heads / logits）
+- `numpy`（尽量只依赖 numpy）
+- `torch`（PyTorch）
+- `tf`（TensorFlow，需要自行安装）
+
+不包含训练/反向传播，也不做检测/分割的完整后处理（只输出 raw heads / logits）。
 
 ## Quick Start
 
@@ -28,9 +29,15 @@ PYTHONPATH=code python -m cv_models.tools.smoke_test --backend tf --model all
 PYTHONPATH=code python -m cv_models.tools.smoke_test --list
 ```
 
-## 每个模型一个文件（class 结构）
+对比不同后端的 forward（需要安装对应框架）：
 
-为了方便“按模型查代码”，另外生成了三套按后端分目录的 class 包装：
+```bash
+PYTHONPATH=code python -m cv_models.tools.compare_backends --model resnet --backends numpy,torch
+```
+
+## 目录结构
+
+每个模型一个文件，并且每个文件是自包含实现（不依赖仓库内其它模块的 import）：
 
 - NumPy：`code/numpy_models/<model_id>.py`
 - PyTorch：`code/pytorch_models/<model_id>.py`
@@ -57,4 +64,3 @@ python code/main.py --backend torch --model faster_r_cnn
 - 输入张量约定：
   - 图像类任务：`inputs["image"]` 为 **NHWC**（`(N,H,W,C)`）float32
   - 图模型：`inputs["x"]` / `inputs["adj"]` 或 `inputs["src"]` / `inputs["dst"]`
-- 这是为了覆盖面与可运行性做的简化实现；如果你希望逐篇论文做更严格的训练复现（B/C 档），建议单独开一个 `reproduce/` 目录按论文逐个推进。

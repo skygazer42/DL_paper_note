@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import sys
 from typing import Iterable
 
-from cv_models.build import build_model
 from cv_models.registry import MODEL_SPECS
 from cv_models.sample_inputs import make_sample_inputs
 
@@ -34,14 +34,23 @@ def main(argv: list[str] | None = None) -> int:
     if backend == "pytorch":
         backend = "torch"
 
+    backend_pkg = {
+        "numpy": "numpy_models",
+        "torch": "pytorch_models",
+        "tf": "tensorflow_models",
+    }.get(backend)
+    if backend_pkg is None:
+        raise SystemExit(f"Unknown backend: {backend!r}")
+
     model_ids = list(_iter_model_ids(args.model.strip()))
     failures: list[str] = []
 
     for model_id in model_ids:
         spec = MODEL_SPECS[model_id]
         try:
-            model = build_model(model_id, backend=backend)  # type: ignore[arg-type]
-            outputs = model(make_sample_inputs(model_id))
+            mod = importlib.import_module(f"{backend_pkg}.{model_id}")
+            model = mod.MODEL_CLASS()
+            outputs = model.forward(make_sample_inputs(model_id))
             if not isinstance(outputs, dict) or not outputs:
                 raise AssertionError("model must return a non-empty dict")
             for k, v in outputs.items():
@@ -64,4 +73,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 
 
 def create(model_id: str):
@@ -9,6 +10,5 @@ def create(model_id: str):
 
 
 def available_model_ids() -> list[str]:
-    from cv_models.registry import MODEL_SPECS
-
-    return list(MODEL_SPECS.keys())
+    pkg_dir = Path(__file__).resolve().parent
+    return sorted([p.stem for p in pkg_dir.glob("*.py") if p.name != "__init__.py"])
