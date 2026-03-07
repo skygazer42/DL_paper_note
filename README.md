@@ -1,21 +1,5 @@
 #  计算机视觉
 
-## 代码实现（A 档：只 forward）
-
-本仓库新增了 `code/`：把本 README 里出现的模型都做成 **toy 版可运行 forward**，并提供三种后端：
-- `numpy`（尽量只依赖 numpy）
-- `torch`（PyTorch）
-- `tf`（TensorFlow，需要自行安装）
-
-快速 smoke test（从仓库根目录运行）：
-
-```bash
-PYTHONPATH=code python -m cv_models.tools.smoke_test --backend numpy --model all
-PYTHONPATH=code python -m cv_models.tools.smoke_test --backend torch --model all
-```
-
-更多说明见：`code/README.md`。
-
 ## image classification
 
 - **BP**:[backprop_old](https://www.iro.umontreal.ca/~vincentp/ift3395/lectures/backprop_old.pdf)  [论文笔记](https://pan.baidu.com/s/1NIycmIlvPB0Lcp74H119sg?pwd=3032 )
