@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -11,7 +10,7 @@ class ForwardModel:
     forward_fn: Callable[[dict[str, Any]], dict[str, Any]]
 
     def __call__(self, inputs: dict[str, Any]) -> dict[str, Any]:
-        # Convert NumPy inputs into backend tensors when needed. Keep simple scalars as-is.
+        # 外部统一喂 NumPy / Python 标量；真正进模型前在这里转成对应后端张量。
         converted: dict[str, Any] = {}
         for k, v in inputs.items():
             if isinstance(v, (int, float, str)):
@@ -19,4 +18,3 @@ class ForwardModel:
             else:
                 converted[k] = self.backend.asarray(v)
         return self.forward_fn(converted)
-

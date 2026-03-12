@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import zlib
 from typing import Any, Callable
@@ -21,17 +20,18 @@ NUM_SEG_CLASSES = 3
 
 
 def _seed(model_id: str) -> int:
-    # Stable across runs / machines.
+    # 只依赖 model_id 生成稳定种子，保证同一个模型在不同机器上参数一致。
     return int(zlib.adler32(model_id.encode("utf-8"))) & 0xFFFF_FFFF
 
 
 def _classifier_head(ops: Any, x, w, b):
+    # 分类模型统一走 GAP + Linear，便于不同 backbone 复用同一套输出头。
     pooled = ops.global_avg_pool2d(x)
     return ops.linear(pooled, w, b)
 
 
 def _simple_backbone_params(pb: ParamBuilder, in_ch: int = 3, base: int = 16):
-    # Returns a small 3-stage CNN backbone (for detection/segmentation)
+    # 检测/分割类 toy 模型共享一个极小的 3-stage CNN 主干，重点演示接口而非还原大模型。
     p: dict[str, Any] = {}
     p["c1.w"], p["c1.b"] = pb.conv2d(in_ch, base, k=3)
     p["c2.w"], p["c2.b"] = pb.conv2d(base, base * 2, k=3)
@@ -40,7 +40,7 @@ def _simple_backbone_params(pb: ParamBuilder, in_ch: int = 3, base: int = 16):
 
 
 def _simple_backbone_forward(ops: Any, x, p: dict[str, Any]):
-    # Produces multi-scale features.
+    # 返回 3 个尺度的特征图，供 FPN / head / decoder 一类结构复用。
     x1 = conv_relu(ops, x, p["c1.w"], p["c1.b"], stride=2)  # 16x16
     x2 = conv_relu(ops, x1, p["c2.w"], p["c2.b"], stride=2)  # 8x8
     x3 = conv_relu(ops, x2, p["c3.w"], p["c3.b"], stride=2)  # 4x4
@@ -136,7 +136,7 @@ def build_googlenet(ops: Any) -> ForwardModel:
     p: dict[str, Any] = {}
     p["stem.w"], p["stem.b"] = pb.conv2d(3, 16, k=3)
 
-    # Inception blocks (tiny)
+    # 这里只保留 Inception 的多分支结构轮廓，规模故意压得很小。
     p["inc1.b1"] = pb.conv2d(16, 8, k=1)
     p["inc1.b3"] = pb.conv2d(16, 8, k=3)
     p["inc1.b5"] = pb.conv2d(16, 8, k=5)

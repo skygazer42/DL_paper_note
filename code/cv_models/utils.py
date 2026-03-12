@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import re
 from dataclasses import is_dataclass
@@ -16,6 +15,7 @@ def read_readme_model_names(readme_path: Path | None = None) -> list[str]:
         readme_path = repo_root() / "README.md"
     text = readme_path.read_text(encoding="utf-8")
 
+    # 根 README 是模型清单的单一来源，registry 会从这里反向生成 model_id。
     names: list[str] = []
     for line in text.splitlines():
         m = re.match(r"\s*-\s*\*\*(.+?)\*\*", line)
@@ -30,6 +30,7 @@ def read_readme_model_names(readme_path: Path | None = None) -> list[str]:
 
 
 _SPECIAL_MODEL_IDS: dict[str, str] = {
+    # README 里的展示名和文件名不完全一致，这里集中做一次纠偏。
     "U-Net": "unet",
     "Mask rcnn": "mask_rcnn",
     "DeepLabv3 plus": "deeplabv3_plus",
@@ -43,6 +44,7 @@ def model_id_from_readme_name(readme_name: str) -> str:
     if readme_name in _SPECIAL_MODEL_IDS:
         return _SPECIAL_MODEL_IDS[readme_name]
 
+    # 其余名称统一规整成小写下划线形式，和文件名保持一致。
     s = readme_name.strip().lower()
     s = s.replace("+", " plus ")
     s = s.replace("-", " ")
@@ -53,6 +55,7 @@ def model_id_from_readme_name(readme_name: str) -> str:
 
 
 def tree_map(fn: Callable[[Any], Any], obj: Any) -> Any:
+    # 对嵌套 dict/list/tuple 递归应用同一个变换，便于做跨后端张量转换。
     if isinstance(obj, dict):
         return {k: tree_map(fn, v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
@@ -61,4 +64,3 @@ def tree_map(fn: Callable[[Any], Any], obj: Any) -> Any:
     if is_dataclass(obj):
         return fn(obj)
     return fn(obj)
-

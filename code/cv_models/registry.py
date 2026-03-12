@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
@@ -24,6 +23,7 @@ class ModelSpec:
     task: Task
 
 
+# 模型列表直接来自根 README，这样文档和代码不会各维护一份清单。
 README_MODEL_NAMES: list[str] = read_readme_model_names()
 
 
@@ -88,7 +88,7 @@ _GRAPH_ADJ = {"SDNE", "Graph neural networks", "A Survey on Graph Diffusion Mode
 
 
 def _task_for_readme_name(name: str) -> Task:
-    # Cleanups for slightly messy README bullets.
+    # README 里有少量命名不规整的条目，这里先归一化再映射任务类型。
     if name.startswith("EfficientDet"):
         name = "EfficientDet"
     if name in _DETECTION:
@@ -116,5 +116,5 @@ for _readme_name in README_MODEL_NAMES:
     model_id = model_id_from_readme_name(clean)
     if model_id in MODEL_SPECS:
         raise ValueError(f"Duplicate model_id {model_id!r} from README name {clean!r}")
+    # 这里把“README 展示名 -> 内部 model_id + task”固定下来，后续工具都用这份表。
     MODEL_SPECS[model_id] = ModelSpec(model_id=model_id, readme_name=clean, task=_task_for_readme_name(clean))
-

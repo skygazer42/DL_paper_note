@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
@@ -16,6 +15,7 @@ class ParamBuilder:
     seed: int
 
     def __post_init__(self):
+        # 参数初始化固定随机种子，这样不同机器/重复运行得到同样的 toy 权重。
         self.rng = np.random.default_rng(self.seed)
 
     def _randn(self, shape: tuple[int, ...], *, scale: float) -> Any:
@@ -27,6 +27,7 @@ class ParamBuilder:
         return self.backend.asarray(arr)
 
     def conv2d(self, in_ch: int, out_ch: int, *, k: int = 3, groups: int = 1) -> tuple[Any, Any]:
+        # 用 fan-in 控制随机权重的尺度，避免 toy forward 一开始就数值爆炸。
         fan_in = _fan_in_conv(k, k, in_ch, groups)
         scale = 1.0 / np.sqrt(float(fan_in))
         w = self._randn((k, k, in_ch // groups, out_ch), scale=scale)
@@ -43,4 +44,3 @@ class ParamBuilder:
     def embedding(self, num_embeddings: int, embedding_dim: int) -> Any:
         scale = 1.0 / np.sqrt(float(max(1, embedding_dim)))
         return self._randn((num_embeddings, embedding_dim), scale=scale)
-

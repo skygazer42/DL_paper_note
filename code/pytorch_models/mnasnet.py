@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 # NOTE: Per request, this file is fully self-contained (no internal imports).
 

@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
@@ -16,6 +15,7 @@ class TorchOps:
     def asarray(self, x: Any):
         import torch
 
+        # 保留整数 / 布尔类型，避免图索引等输入被错误地转成 float。
         if isinstance(x, torch.Tensor):
             if x.dtype.is_floating_point:
                 return x.to(dtype=self.dtype)
@@ -44,6 +44,7 @@ class TorchOps:
         if b is not None:
             b = self.asarray(b)
 
+        # 这个 toy 项目内部统一用 NHWC；进入 torch 卷积前再转成标准 NCHW / OIHW。
         x_nchw = x.permute(0, 3, 1, 2).contiguous()
         w_oihw = w.permute(3, 2, 0, 1).contiguous()
         y = F.conv2d(x_nchw, w_oihw, bias=b, stride=stride, padding=padding, dilation=dilation, groups=groups)
@@ -145,6 +146,7 @@ class TorchOps:
         if not isinstance(indices, torch.Tensor):
             indices = torch.tensor(indices, dtype=torch.long)
         if axis != 0:
+            # 目前图模型只用到按首维 gather，没必要把通用版本也做一遍。
             raise NotImplementedError("torch gather only implemented for axis=0 in this toy ops")
         return params.index_select(0, indices)
 
